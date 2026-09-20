@@ -1,0 +1,23 @@
+# Spring Boot
+**/target/
+**/.classpath
+**/.project
+**/.settings/
+
+# React
+**/node_modules/
+**/dist/
+
+# VS Code
+.vscode/
+
+# Environment
+.env
+.env.local
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
