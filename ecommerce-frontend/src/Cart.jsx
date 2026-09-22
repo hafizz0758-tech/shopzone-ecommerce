@@ -1,373 +1,227 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-function Cart({ setPage, loggedInUser }) {
+function Cart({ setPage, loggedInUser, setCartCount }) {
 
-  const [cartItems, setCartItems] = useState([]);
+  const [carts, setCarts] = useState([]);
 
-
-  // Get current user's cart
-  const getCartItems = () => {
-
-    if (!loggedInUser) {
-      setCartItems([]);
-      return;
-    }
-
-    axios.get(
-      `http://localhost:8080/api/cart?userId=${loggedInUser.id}`
-    )
-      .then((response) => {
-
-        console.log(response.data);
-
-        setCartItems(response.data);
-
-      })
-      .catch((error) => {
-
-        console.log(error);
-
-      });
-
-  };
-
-
-  // Load cart
   useEffect(() => {
 
-    getCartItems();
-
-  }, [loggedInUser]);
-
-
-  // Increase quantity
-  const increaseQuantity = (item) => {
-
-    const updatedItem = {
-
-      userId: loggedInUser.id,
-
-      productId: item.productId,
-
-      name: item.name,
-
-      price: item.price,
-
-      quantity: item.quantity + 1,
-
-      image: item.image
-
-    };
-
-
-    axios.put(
-      `http://localhost:8080/api/cart/${item.id}`,
-      updatedItem
-    )
-      .then(() => {
-
-        getCartItems();
-
-      })
-      .catch((error) => {
-
-        console.log(error);
-
-        if (
-          error.response &&
-          error.response.data
-        ) {
-
-          const data = error.response.data;
-
-          if (data.message) {
-
-            alert(data.message);
-
-          } else if (data.detail) {
-
-            alert(data.detail);
-
-          } else {
-
-            alert("Stock limit exceeded");
-
-          }
-
-        } else {
-
-          alert("Unable to update quantity");
-
-        }
-
-      });
-
-  };
-
-
-  // Decrease quantity
-  const decreaseQuantity = (item) => {
-
-    if (item.quantity <= 1) {
-
+    if (!loggedInUser) {
       return;
-
     }
 
+    axios
+      .get(`http://localhost:8080/api/cart?userId=${loggedInUser.id}`)
+      .then((response) => {
 
-    const updatedItem = {
+        setCarts(response.data);
 
-      userId: loggedInUser.id,
+        const count = response.data.reduce(
+          (total, item) => total + item.quantity,
+          0
+        );
 
-      productId: item.productId,
-
-      name: item.name,
-
-      price: item.price,
-
-      quantity: item.quantity - 1,
-
-      image: item.image
-
-    };
-
-
-    axios.put(
-      `http://localhost:8080/api/cart/${item.id}`,
-      updatedItem
-    )
-      .then(() => {
-
-        getCartItems();
+        setCartCount(count);
 
       })
       .catch((error) => {
+        console.log("Cart error:", error);
+      });
 
-        console.log(error);
+  }, [loggedInUser, setCartCount]);
 
+
+  const removeFromCart = (id) => {
+
+    axios
+      .delete(`http://localhost:8080/api/cart/${id}`)
+      .then(() => {
+
+        setCarts((previousCarts) =>
+          previousCarts.filter((item) => item.id !== id)
+        );
+
+        setCartCount((previousCount) =>
+          Math.max(previousCount - 1, 0)
+        );
+
+      })
+      .catch((error) => {
+        console.log("Remove cart error:", error);
       });
 
   };
 
 
-  // Remove item
-  const removeItem = (id) => {
-
-    axios.delete(
-      `http://localhost:8080/api/cart/${id}`
-    )
-      .then(() => {
-
-        getCartItems();
-
-      })
-      .catch((error) => {
-
-        console.log(error);
-
-      });
-
-  };
-
-
-  // Grand total
-  const grandTotal = cartItems.reduce(
-    (total, item) =>
-      total + (item.price * item.quantity),
+  const total = carts.reduce(
+    (sum, item) => sum + item.price * item.quantity,
     0
   );
 
 
-  // Checkout
-  const proceedToCheckout = () => {
+  if (!loggedInUser) {
 
-    if (loggedInUser) {
+    return (
+      <div className="cart-page">
 
-      setPage("checkout");
+        <div className="empty-cart">
 
-    } else {
+          <h2>
+            Please Login
+          </h2>
 
-      alert("Please login first!");
+          <p>
+            Login to view your cart.
+          </p>
 
-      setPage("login");
+          <button onClick={() => setPage("login")}>
+            Login
+          </button>
 
-    }
+        </div>
 
-  };
+      </div>
+    );
+
+  }
 
 
   return (
 
     <div className="cart-page">
 
+      <div className="cart-container">
 
-      <h1>My Cart 🛒</h1>
-
-
-      {/* Continue Shopping */}
-
-      <button
-        className="continue-btn"
-        onClick={() => setPage("products")}
-      >
-        ← Continue Shopping
-      </button>
-
-
-      {/* Empty Cart */}
-
-      {cartItems.length === 0 ? (
-
-        <div className="empty-cart">
-
-          <h2>
-            Your Cart is Empty 🛒
-          </h2>
+        <div className="cart-heading">
 
           <p>
-            Add some products to your cart.
+            SHOPZONE
           </p>
 
-          <button
-            onClick={() => setPage("products")}
-          >
-            Start Shopping
-          </button>
+          <h1>
+            My Cart
+          </h1>
+
+          <span>
+            Review your selected products.
+          </span>
 
         </div>
 
-      ) : (
 
-        <>
+        {carts.length === 0 ? (
 
+          <div className="empty-cart">
 
-          {/* Cart Items */}
+            <div className="empty-cart-icon">
+              🛒
+            </div>
 
-          <div className="cart-list">
+            <h2>
+              Your Cart is Empty
+            </h2>
 
-            {cartItems.map((item) => (
+            <p>
+              You haven't added any products yet.
+            </p>
 
-              <div
-                key={item.id}
-                className="cart-item"
-              >
+            <button onClick={() => setPage("products")}>
+              Continue Shopping
+            </button>
 
+          </div>
 
-                {/* Product Image */}
+        ) : (
 
-                <img
-                  src={
-                    `http://localhost:8080/images/${item.image}`
-                  }
-                  alt={item.name}
-                  className="cart-image"
-                />
+          <>
 
+            <div className="cart-items">
 
-                {/* Product Details */}
+              {carts.map((item) => (
 
-                <div className="cart-details">
+                <div
+                  className="cart-item"
+                  key={item.id}
+                >
 
-                  <h2>
-                    {item.name}
-                  </h2>
+                  <img
+                    src={`http://localhost:8080/images/${item.image}`}
+                    alt={item.name}
+                    className="cart-item-image"
+                  />
 
+                  <div className="cart-item-info">
 
-                  <p className="cart-price">
-                    ₹{item.price}
-                  </p>
+                    <h2>
+                      {item.name}
+                    </h2>
 
+                    <p>
+                      Price: ₹{item.price}
+                    </p>
 
-                  {/* Quantity */}
+                    <p>
+                      Quantity: {item.quantity}
+                    </p>
 
-                  <div className="quantity">
-
-                    <button
-                      onClick={() =>
-                        decreaseQuantity(item)
-                      }
-                    >
-                      −
-                    </button>
-
-
-                    <span>
-                      {item.quantity}
-                    </span>
-
-
-                    <button
-                      onClick={() =>
-                        increaseQuantity(item)
-                      }
-                    >
-                      +
-                    </button>
+                    <h3>
+                      ₹{item.price * item.quantity}
+                    </h3>
 
                   </div>
 
 
-                  {/* Item Total */}
-
-                  <p className="item-total">
-
-                    Total: ₹
-                    {item.price * item.quantity}
-
-                  </p>
-
-
-                  {/* Remove */}
-
                   <button
-                    className="remove-btn"
-                    onClick={() =>
-                      removeItem(item.id)
-                    }
+                    className="remove-cart-btn"
+                    onClick={() => removeFromCart(item.id)}
                   >
                     Remove
                   </button>
 
                 </div>
 
+              ))}
+
+            </div>
+
+
+            <div className="cart-summary">
+
+              <h2>
+                Cart Summary
+              </h2>
+
+              <div className="cart-total">
+
+                <span>
+                  Total
+                </span>
+
+                <strong>
+                  ₹{total}
+                </strong>
+
               </div>
 
-            ))}
+              <button
+                className="checkout-btn"
+                onClick={() => setPage("checkout")}
+              >
+                Proceed to Checkout →
+              </button>
 
-          </div>
+            </div>
 
+          </>
 
-          {/* Cart Summary */}
+        )}
 
-          <div className="cart-summary">
-
-            <h2>
-              Grand Total
-            </h2>
-
-
-            <h1>
-              ₹{grandTotal}
-            </h1>
-
-
-            <button
-              onClick={proceedToCheckout}
-            >
-              Proceed to Checkout →
-            </button>
-
-          </div>
-
-        </>
-
-      )}
+      </div>
 
     </div>
 
   );
-
 }
 
 export default Cart;

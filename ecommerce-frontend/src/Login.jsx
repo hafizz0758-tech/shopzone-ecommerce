@@ -1,62 +1,54 @@
 import { useState } from "react";
 import axios from "axios";
 
-function Login({ setPage, setLoggedInUser }) {
+function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const loginUser = (e) => {
+  const handleLogin = async (e) => {
 
     e.preventDefault();
 
-    const user = {
-      email: email,
-      password: password
-    };
+    console.log("Login button clicked");
 
-    axios.post(
-      "http://localhost:8080/api/users/login",
-      user
-    )
-    .then((response) => {
+    try {
 
-      console.log(response.data);
+      const response = await axios.post(
+        "http://localhost:8080/api/users/login",
+        {
+          email: email,
+          password: password
+        }
+      );
 
-      // Save user in browser
+      console.log("LOGIN SUCCESS");
+      console.log("User:", response.data);
+
+      // Save logged-in user
       localStorage.setItem(
         "loggedInUser",
         JSON.stringify(response.data)
       );
 
-      // Set logged-in user
-      setLoggedInUser(response.data);
+      console.log("User saved in localStorage");
 
-      alert("Login successful!");
+      // Go to home page
+      window.location.href = "/";
 
-      // Go to products
-      setPage("products");
+    } catch (error) {
 
-    })
-    .catch((error) => {
+      console.log("LOGIN ERROR");
 
-      console.log(error);
-
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-
-        alert(error.response.data.message);
-
+      if (error.response) {
+        console.log("Status:", error.response.status);
+        console.log("Response:", error.response.data);
       } else {
-
-        alert("Login failed");
-
+        console.log("Error:", error.message);
       }
 
-    });
+      // No alert
+    }
   };
 
   return (
@@ -68,7 +60,7 @@ function Login({ setPage, setLoggedInUser }) {
 
         <p>Login to ShopZone</p>
 
-        <form onSubmit={loginUser}>
+        <form onSubmit={handleLogin}>
 
           <label>Email</label>
 
@@ -96,13 +88,14 @@ function Login({ setPage, setLoggedInUser }) {
 
         </form>
 
-        <p>
-          Don't have an account?
-        </p>
+        <p>Don't have an account?</p>
 
         <button
+          type="button"
           className="register-link"
-          onClick={() => setPage("register")}
+          onClick={() => {
+            window.location.href = "/register";
+          }}
         >
           Create Account
         </button>

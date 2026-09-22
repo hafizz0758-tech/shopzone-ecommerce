@@ -4,27 +4,49 @@ import axios from "axios";
 function AdminOrders({ setPage }) {
 
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
 
-  const getOrders = () => {
+  // ==========================================
+  // GET ALL ORDERS
+  // ==========================================
 
-    axios.get(
-      "http://localhost:8080/api/orders/all"
-    )
-      .then((response) => {
+  const getOrders = async () => {
 
-        console.log(response.data);
+    try {
 
-        setOrders(response.data);
+      console.log("Getting all orders...");
 
-      })
-      .catch((error) => {
+      const response = await axios.get(
+        "http://localhost:8080/api/orders/all"
+      );
 
-        console.log(error);
 
-        alert("Failed to load orders");
+      console.log("ALL ORDERS:", response.data);
 
-      });
+
+      setOrders(response.data);
+
+    } catch (error) {
+
+      console.log("Get orders error:", error);
+
+      if (error.response) {
+
+        console.log(
+          "Backend response:",
+          error.response.data
+        );
+
+      }
+
+      alert("Failed to load orders");
+
+    } finally {
+
+      setLoading(false);
+
+    }
 
   };
 
@@ -36,98 +58,330 @@ function AdminOrders({ setPage }) {
   }, []);
 
 
-  return (
+  // ==========================================
+  // UPDATE STATUS
+  // ==========================================
 
-    <div className="admin-orders">
+  const updateStatus = async (orderId, status) => {
 
-      <h1>
-        Customer Orders 📦
-      </h1>
+    try {
 
+      const response = await axios.put(
 
-      <button
-        onClick={() => setPage("admin")}
-      >
-        ← Back to Admin
-      </button>
+        `http://localhost:8080/api/orders/${orderId}/status?status=${encodeURIComponent(status)}`
+
+      );
 
 
-      {orders.length === 0 ? (
+      console.log("Status updated:", response.data);
 
-        <div>
+
+      setOrders((previousOrders) =>
+
+        previousOrders.map((order) =>
+
+          order.id === orderId
+
+            ? {
+                ...order,
+                status: response.data.status
+              }
+
+            : order
+
+        )
+
+      );
+
+
+      alert(
+        `Order #${orderId} updated to ${status}`
+      );
+
+
+    } catch (error) {
+
+      console.log("Update status error:", error);
+
+      alert("Failed to update order status");
+
+    }
+
+  };
+
+
+  // ==========================================
+  // LOADING
+  // ==========================================
+
+  if (loading) {
+
+    return (
+
+      <div className="admin-orders-page">
+
+        <div className="admin-orders-loading">
 
           <h2>
-            No Orders Found
+            Loading Orders...
           </h2>
 
+        </div>
+
+      </div>
+
+    );
+
+  }
+
+
+  // ==========================================
+  // PAGE
+  // ==========================================
+
+  return (
+
+    <div className="admin-orders-page">
+
+      <div className="admin-orders-container">
+
+
+        <button
+          className="admin-back-btn"
+          onClick={() => setPage("admin")}
+        >
+          ← Back to Dashboard
+        </button>
+
+
+        <div className="admin-orders-heading">
+
           <p>
-            No customer orders available.
+            SHOPZONE ADMIN
           </p>
 
+          <h1>
+            Customer Orders
+          </h1>
+
+          <span>
+            Manage customer orders and delivery status.
+          </span>
+
         </div>
 
-      ) : (
 
-        <div className="admin-orders-list">
+        {orders.length === 0 ? (
 
-          {orders.map((order) => (
+          <div className="no-orders-box">
 
-            <div
-              key={order.id}
-              className="admin-order-card"
-            >
-
-              <h2>
-                Order #{order.id}
-              </h2>
-
-              <p>
-                <strong>User ID:</strong>{" "}
-                {order.userId}
-              </p>
-
-              <p>
-                <strong>Name:</strong>{" "}
-                {order.name}
-              </p>
-
-              <p>
-                <strong>Phone:</strong>{" "}
-                {order.phone}
-              </p>
-
-              <p>
-                <strong>Address:</strong>{" "}
-                {order.address}
-              </p>
-
-              <p>
-                <strong>Payment:</strong>{" "}
-                {order.payment}
-              </p>
-
-              <p>
-                <strong>Products:</strong>{" "}
-                {order.productName}
-              </p>
-
-              <p>
-                <strong>Quantity:</strong>{" "}
-                {order.quantity}
-              </p>
-
-              <p>
-                <strong>Total:</strong>{" "}
-                ₹{order.total}
-              </p>
-
+            <div className="no-orders-icon">
+              📦
             </div>
 
-          ))}
+            <h2>
+              No Orders Found
+            </h2>
 
-        </div>
+            <p>
+              There are no customer orders yet.
+            </p>
 
-      )}
+            <button
+              onClick={getOrders}
+              style={{
+                marginTop: "20px",
+                padding: "10px 18px",
+                border: "none",
+                borderRadius: "8px",
+                background: "#111827",
+                color: "white",
+                cursor: "pointer"
+              }}
+            >
+              Refresh Orders
+            </button>
+
+          </div>
+
+        ) : (
+
+          <div className="admin-orders-grid">
+
+            {orders.map((order) => (
+
+              <div
+                className="admin-order-card"
+                key={order.id}
+              >
+
+
+                {/* HEADER */}
+
+                <div className="admin-order-top">
+
+                  <div>
+
+                    <span className="order-label">
+                      ORDER ID
+                    </span>
+
+                    <h2>
+                      #{order.id}
+                    </h2>
+
+                  </div>
+
+
+                  <span className="order-status status-packed">
+
+                    {order.status || "Packed"}
+
+                  </span>
+
+                </div>
+
+
+                {/* CUSTOMER */}
+
+                <div className="admin-order-section">
+
+                  <h3>
+                    Customer Details
+                  </h3>
+
+                  <p>
+                    <strong>Name:</strong>{" "}
+                    {order.name}
+                  </p>
+
+                  <p>
+                    <strong>User ID:</strong>{" "}
+                    {order.userId}
+                  </p>
+
+                  <p>
+                    <strong>Phone:</strong>{" "}
+                    {order.phone}
+                  </p>
+
+                  <p>
+                    <strong>Address:</strong>{" "}
+                    {order.address}
+                  </p>
+
+                </div>
+
+
+                {/* ORDER */}
+
+                <div className="admin-order-section">
+
+                  <h3>
+                    Order Details
+                  </h3>
+
+                  <p>
+                    <strong>Product:</strong>{" "}
+                    {order.productName}
+                  </p>
+
+                  <p>
+                    <strong>Quantity:</strong>{" "}
+                    {order.quantity}
+                  </p>
+
+                  <p>
+                    <strong>Payment:</strong>{" "}
+                    {order.payment}
+                  </p>
+
+                  <p className="admin-order-total">
+
+                    <strong>
+                      Total:
+                    </strong>{" "}
+
+                    ₹{order.total}
+
+                  </p>
+
+                </div>
+
+
+                {/* STATUS */}
+
+                <div className="order-status-section">
+
+                  <h3>
+                    Update Delivery Status
+                  </h3>
+
+
+                  <div className="status-buttons">
+
+
+                    <button
+                      onClick={() =>
+                        updateStatus(
+                          order.id,
+                          "Packed"
+                        )
+                      }
+                    >
+                      📦 Packed
+                    </button>
+
+
+                    <button
+                      onClick={() =>
+                        updateStatus(
+                          order.id,
+                          "Shipped"
+                        )
+                      }
+                    >
+                      🚚 Shipped
+                    </button>
+
+
+                    <button
+                      onClick={() =>
+                        updateStatus(
+                          order.id,
+                          "Out for Delivery"
+                        )
+                      }
+                    >
+                      🛵 Out for Delivery
+                    </button>
+
+
+                    <button
+                      onClick={() =>
+                        updateStatus(
+                          order.id,
+                          "Delivered"
+                        )
+                      }
+                    >
+                      ✅ Delivered
+                    </button>
+
+                  </div>
+
+                </div>
+
+
+              </div>
+
+            ))}
+
+          </div>
+
+        )}
+
+      </div>
 
     </div>
 

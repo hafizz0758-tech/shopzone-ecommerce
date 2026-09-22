@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import axios from "axios";
 
 import ProductCard from "./components/ProductCard";
 import ProductDetails from "./components/ProductDetails";
@@ -20,163 +21,294 @@ import AdminOrders from "./AdminOrders";
 import "./App.css";
 
 
+// =====================================================
+// GET PAGE FROM URL
+// =====================================================
+
+function getPageFromURL() {
+
+  const path = window.location.pathname;
+
+  // Home
+  if (path === "/") {
+    return "home";
+  }
+
+  // Customer pages
+  if (path === "/products") {
+    return "products";
+  }
+
+  if (path === "/product-details") {
+    return "productDetails";
+  }
+
+  if (path === "/login") {
+    return "login";
+  }
+
+  if (path === "/register") {
+    return "register";
+  }
+
+  if (path === "/cart") {
+    return "cart";
+  }
+
+  if (path === "/checkout") {
+    return "checkout";
+  }
+
+if (path === "/success") {
+    return "orderSuccess";
+}
+
+  if (path === "/orders") {
+    return "orders";
+  }
+
+
+  // Admin pages
+  if (path === "/admin") {
+    return "admin";
+  }
+
+  if (path === "/admin/login") {
+    return "adminLogin";
+  }
+
+  if (path === "/admin/add-product") {
+    return "addProduct";
+  }
+
+  if (path === "/admin/products") {
+    return "adminProducts";
+  }
+
+  if (path === "/admin/orders") {
+    return "adminOrders";
+  }
+
+
+  // Unknown URL
+  return "home";
+}
+
+
+// =====================================================
+// GET URL FOR PAGE
+// =====================================================
+
+function getURLFromPage(page) {
+
+  switch (page) {
+
+    case "home":
+      return "/";
+
+    case "products":
+      return "/products";
+
+    case "productDetails":
+      return "/product-details";
+
+    case "login":
+      return "/login";
+
+    case "register":
+      return "/register";
+
+    case "cart":
+      return "/cart";
+
+    case "checkout":
+      return "/checkout";
+
+    case "orderSuccess":
+    return "/success";
+
+    case "orders":
+      return "/orders";
+
+    case "admin":
+      return "/admin";
+
+    case "adminLogin":
+      return "/admin/login";
+
+    case "addProduct":
+      return "/admin/add-product";
+
+    case "adminProducts":
+      return "/admin/products";
+
+    case "adminOrders":
+      return "/admin/orders";
+
+    default:
+      return "/";
+  }
+}
+
+
+// =====================================================
+// APP
+// =====================================================
+
 function App() {
 
-  // ==================================================
-  // GET PAGE FROM URL
-  // ==================================================
 
-  const getPageFromURL = () => {
+  // ===================================================
+  // PAGE
+  // ===================================================
 
-    const path = window.location.pathname;
+  const [page, setPage] = useState(() => {
 
+    const currentPage = getPageFromURL();
 
-    if (path === "/admin-login") {
+    // If user opens /admin directly
+    if (currentPage === "admin") {
+
+      const savedAdmin =
+        localStorage.getItem("admin");
+
+      if (savedAdmin) {
+        return "admin";
+      }
+
       return "adminLogin";
     }
 
-    if (path === "/admin") {
-      return "admin";
-    }
 
-    if (path === "/admin/add-product") {
-      return "adminAddProduct";
-    }
+    // If user opens admin sub-pages directly
+    if (
+      currentPage === "addProduct" ||
+      currentPage === "adminProducts" ||
+      currentPage === "adminOrders"
+    ) {
 
-    if (path === "/admin/products") {
-      return "adminProducts";
-    }
+      const savedAdmin =
+        localStorage.getItem("admin");
 
-    if (path === "/admin/orders") {
-      return "adminOrders";
-    }
+      if (savedAdmin) {
+        return currentPage;
+      }
 
-
-    if (path === "/products") {
-      return "products";
-    }
-
-    if (path === "/cart") {
-      return "cart";
-    }
-
-    if (path === "/checkout") {
-      return "checkout";
-    }
-
-    if (path === "/orders") {
-      return "orders";
-    }
-
-    if (path === "/login") {
-      return "login";
-    }
-
-    if (path === "/register") {
-      return "register";
+      return "adminLogin";
     }
 
 
-    return "home";
-  };
-
-
-  // ==================================================
-  // PAGE
-  // ==================================================
-
-  const [page, setPage] = useState(getPageFromURL);
-
-
-  // ==================================================
-  // CUSTOMER
-  // ==================================================
-
-  const [loggedInUser, setLoggedInUser] = useState(() => {
-
-    const savedUser =
-      localStorage.getItem("loggedInUser");
-
-    return savedUser
-      ? JSON.parse(savedUser)
-      : null;
+    return currentPage;
 
   });
 
 
-  // ==================================================
-  // ADMIN
-  // ==================================================
-
-  const [admin, setAdmin] = useState(() => {
-
-    const savedAdmin =
-      localStorage.getItem("admin");
-
-    return savedAdmin
-      ? JSON.parse(savedAdmin)
-      : null;
-
-  });
-
-
-  // ==================================================
+  // ===================================================
   // PRODUCTS
-  // ==================================================
+  // ===================================================
 
   const [products, setProducts] = useState([]);
 
 
-  // ==================================================
-  // CART COUNT
-  // ==================================================
-
-  const [cartCount, setCartCount] = useState(0);
-
-
-  // ==================================================
+  // ===================================================
   // SELECTED PRODUCT
-  // ==================================================
+  // ===================================================
 
   const [selectedProduct, setSelectedProduct] =
     useState(null);
 
 
-  // ==================================================
-  // CATEGORY
-  // ==================================================
+  // ===================================================
+  // CART COUNT
+  // ===================================================
 
-  const [selectedCategory, setSelectedCategory] =
-    useState("All");
-
-
-  // ==================================================
-  // MENU
-  // ==================================================
-
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [cartCount, setCartCount] =
+    useState(0);
 
 
-  // ==================================================
-  // LOAD PRODUCTS
-  // ==================================================
+  // ===================================================
+  // CUSTOMER LOGIN
+  // ===================================================
 
-  const loadProducts = () => {
+  const [loggedInUser, setLoggedInUser] =
+    useState(() => {
 
-    fetch("http://localhost:8080/api/products")
+      const savedUser =
+        localStorage.getItem("loggedInUser");
 
-      .then((response) => response.json())
+      if (!savedUser) {
+        return null;
+      }
 
-      .then((data) => {
+      try {
+        return JSON.parse(savedUser);
+      } catch (error) {
 
-        setProducts(data);
+        console.log(
+          "Invalid loggedInUser data:",
+          error
+        );
+
+        localStorage.removeItem(
+          "loggedInUser"
+        );
+
+        return null;
+      }
+
+    });
+
+
+  // ===================================================
+  // ADMIN LOGIN
+  // ===================================================
+
+  const [admin, setAdmin] =
+    useState(() => {
+
+      const savedAdmin =
+        localStorage.getItem("admin");
+
+      if (!savedAdmin) {
+        return null;
+      }
+
+      try {
+        return JSON.parse(savedAdmin);
+      } catch (error) {
+
+        console.log(
+          "Invalid admin data:",
+          error
+        );
+
+        localStorage.removeItem("admin");
+
+        return null;
+      }
+
+    });
+
+
+  // ===================================================
+  // GET PRODUCTS
+  // ===================================================
+
+  const getProducts = () => {
+
+    axios
+      .get(
+        "http://localhost:8080/api/products"
+      )
+      .then((response) => {
+
+        setProducts(response.data);
 
       })
-
       .catch((error) => {
 
         console.log(
-          "Product loading error:",
+          "Get products error:",
           error
         );
 
@@ -185,152 +317,83 @@ function App() {
   };
 
 
-  useEffect(() => {
+  // ===================================================
+  // GET CART COUNT
+  // ===================================================
 
-    loadProducts();
+  const getCartCount = (user) => {
 
-  }, []);
-
-
-  // ==================================================
-  // LOAD CART COUNT
-  // ==================================================
-
-  useEffect(() => {
-
-    if (!loggedInUser) {
+    if (!user) {
 
       setCartCount(0);
 
       return;
-
     }
 
 
-    fetch(
-      `http://localhost:8080/api/cart?userId=${loggedInUser.id}`
-    )
+    axios
+      .get(
+        `http://localhost:8080/api/cart?userId=${user.id}`
+      )
+      .then((response) => {
 
-      .then((response) => response.json())
-
-      .then((data) => {
-
-        const count = data.reduce(
-          (total, item) =>
-            total + item.quantity,
-          0
-        );
+        const count =
+          response.data.reduce(
+            (total, item) =>
+              total + item.quantity,
+            0
+          );
 
         setCartCount(count);
 
       })
-
       .catch((error) => {
 
         console.log(
-          "Cart count error:",
+          "Get cart count error:",
           error
         );
 
+        setCartCount(0);
+
       });
-
-  }, [loggedInUser]);
-
-
-  // ==================================================
-  // NAVIGATION
-  // ==================================================
-
-  const navigate = (newPage) => {
-
-    let newPath = "/";
-
-
-    if (newPage === "home") {
-      newPath = "/";
-    }
-
-    else if (newPage === "products") {
-      newPath = "/products";
-    }
-
-    else if (newPage === "cart") {
-      newPath = "/cart";
-    }
-
-    else if (newPage === "checkout") {
-      newPath = "/checkout";
-    }
-
-    else if (newPage === "orders") {
-      newPath = "/orders";
-    }
-
-    else if (newPage === "login") {
-      newPath = "/login";
-    }
-
-    else if (newPage === "register") {
-      newPath = "/register";
-    }
-
-    else if (newPage === "adminLogin") {
-      newPath = "/admin-login";
-    }
-
-    else if (newPage === "admin") {
-      newPath = "/admin";
-    }
-
-    else if (newPage === "adminAddProduct") {
-      newPath = "/admin/add-product";
-    }
-
-    else if (newPage === "adminProducts") {
-      newPath = "/admin/products";
-    }
-
-    else if (newPage === "adminOrders") {
-      newPath = "/admin/orders";
-    }
-
-
-    window.history.pushState(
-      {},
-      "",
-      newPath
-    );
-
-
-    setPage(newPage);
-
-    setMenuOpen(false);
-
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
 
   };
 
 
-  // ==================================================
+  // ===================================================
+  // INITIAL LOAD
+  // ===================================================
+
+  useEffect(() => {
+
+    getProducts();
+
+    if (loggedInUser) {
+
+      getCartCount(loggedInUser);
+
+    } else {
+
+      setCartCount(0);
+
+    }
+
+  }, []);
+
+
+  // ===================================================
   // BROWSER BACK / FORWARD
-  // ==================================================
+  // ===================================================
 
   useEffect(() => {
 
     const handlePopState = () => {
 
-      setPage(getPageFromURL());
+      const newPage =
+        getPageFromURL();
 
-      setMenuOpen(false);
-
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
+      setPage(newPage);
 
     };
 
@@ -353,115 +416,132 @@ function App() {
   }, []);
 
 
-  // ==================================================
-  // HOME
-  // ==================================================
+  // ===================================================
+  // NAVIGATION
+  // ===================================================
 
-  const goHome = () => {
+  const navigate = (newPage) => {
 
-    navigate("home");
+    // -----------------------------------------------
+    // Product details
+    // -----------------------------------------------
 
-  };
+    if (
+      newPage === "productDetails" &&
+      !selectedProduct
+    ) {
 
-
-  // ==================================================
-  // PRODUCTS
-  // ==================================================
-
-  const goProducts = () => {
-
-    setSelectedCategory("All");
-
-    navigate("products");
-
-  };
-
-
-  // ==================================================
-  // CART
-  // ==================================================
-
-  const openCart = () => {
-
-    if (!loggedInUser) {
-
-      alert("Please login first!");
-
-      navigate("login");
-
-      return;
+      newPage = "products";
 
     }
 
 
-    navigate("cart");
+    // -----------------------------------------------
+    // Admin protection
+    // -----------------------------------------------
 
-  };
+    if (
+      (
+        newPage === "admin" ||
+        newPage === "addProduct" ||
+        newPage === "adminProducts" ||
+        newPage === "adminOrders"
+      ) &&
+      !admin
+    ) {
 
-
-  // ==================================================
-  // ORDERS
-  // ==================================================
-
-  const openOrders = () => {
-
-    if (!loggedInUser) {
-
-      alert("Please login first!");
-
-      navigate("login");
-
-      return;
+      newPage = "adminLogin";
 
     }
 
 
-    navigate("orders");
+    // -----------------------------------------------
+    // Customer orders
+    // -----------------------------------------------
+
+    if (
+      newPage === "orders" &&
+      !loggedInUser
+    ) {
+
+      newPage = "login";
+
+    }
+
+
+    // -----------------------------------------------
+    // Update browser URL
+    // -----------------------------------------------
+
+    const newURL =
+      getURLFromPage(newPage);
+
+    window.history.pushState(
+      {},
+      "",
+      newURL
+    );
+
+
+    // -----------------------------------------------
+    // Update React page
+    // -----------------------------------------------
+
+    setPage(newPage);
+
+
+    // -----------------------------------------------
+    // Refresh products
+    // -----------------------------------------------
+
+    if (newPage === "products") {
+
+      getProducts();
+
+    }
+
+
+    // -----------------------------------------------
+    // Refresh cart count
+    // -----------------------------------------------
+
+    if (
+      newPage === "cart" &&
+      loggedInUser
+    ) {
+
+      getCartCount(
+        loggedInUser
+      );
+
+    }
 
   };
 
 
-  // ==================================================
+  // ===================================================
   // CUSTOMER LOGIN SUCCESS
-  // ==================================================
+  // ===================================================
 
   const handleLoginSuccess = (user) => {
 
     setLoggedInUser(user);
-
 
     localStorage.setItem(
       "loggedInUser",
       JSON.stringify(user)
     );
 
-
-    alert("Login successful!");
-
+    getCartCount(user);
 
     navigate("home");
 
   };
 
 
-  // ==================================================
-  // REGISTER SUCCESS
-  // ==================================================
-
-  const handleRegisterSuccess = () => {
-
-    alert(
-      "Registration successful!"
-    );
-
-    navigate("login");
-
-  };
-
-
-  // ==================================================
+  // ===================================================
   // CUSTOMER LOGOUT
-  // ==================================================
+  // ===================================================
 
   const handleLogout = () => {
 
@@ -469,130 +549,53 @@ function App() {
       "loggedInUser"
     );
 
-
     setLoggedInUser(null);
 
     setCartCount(0);
-
-
-    alert(
-      "Logged out successfully!"
-    );
-
 
     navigate("home");
 
   };
 
 
-  // ==================================================
+  // ===================================================
   // ADMIN LOGIN SUCCESS
-  // ==================================================
+  // ===================================================
 
-  const handleAdminLoginSuccess =
-    (adminData) => {
+  const handleAdminLoginSuccess = (
+    adminData
+  ) => {
 
-      setAdmin(adminData);
+    setAdmin(adminData);
 
-
-      localStorage.setItem(
-        "admin",
-        JSON.stringify(adminData)
-      );
-
-
-      alert(
-        "Admin login successful!"
-      );
-
-
-      navigate("admin");
-
-    };
-
-
-  // ==================================================
-  // ADMIN LOGOUT
-  // ==================================================
-
-  const handleAdminLogout = () => {
-
-    localStorage.removeItem(
-      "admin"
+    localStorage.setItem(
+      "admin",
+      JSON.stringify(adminData)
     );
 
-
-    setAdmin(null);
-
-
-    alert(
-      "Admin logged out!"
-    );
-
-
-    navigate("adminLogin");
+    navigate("admin");
 
   };
 
 
-  // ==================================================
-  // PRODUCT DETAILS
-  // ==================================================
+  // ===================================================
+  // ADMIN LOGOUT
+  // ===================================================
 
-  const openProductDetails =
-    (product) => {
+  const handleAdminLogout = () => {
 
-      setSelectedProduct(product);
+    localStorage.removeItem("admin");
 
+    setAdmin(null);
 
-      setPage("productDetails");
+    navigate("home");
 
-
-      setMenuOpen(false);
-
-
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
-
-    };
+  };
 
 
-  // ==================================================
-  // CATEGORIES
-  // ==================================================
-
-  const categories = [
-    "All",
-    ...new Set(
-      products
-        .map(
-          (product) =>
-            product.category
-        )
-        .filter(Boolean)
-    )
-  ];
-
-
-  // ==================================================
-  // FILTER PRODUCTS
-  // ==================================================
-
-  const filteredProducts =
-    selectedCategory === "All"
-      ? products
-      : products.filter(
-          (product) =>
-            product.category ===
-            selectedCategory
-        );
-
-
-  // ==================================================
+  // ===================================================
   // NAVBAR
-  // ==================================================
+  // ===================================================
 
   const Navbar = () => {
 
@@ -601,83 +604,87 @@ function App() {
       <nav className="navbar">
 
 
+        {/* LOGO */}
+
         <div
           className="logo"
-          onClick={goHome}
+          onClick={() =>
+            navigate("home")
+          }
         >
           ShopZone
         </div>
 
 
+        {/* NAV LINKS */}
+
         <div className="nav-links">
 
 
-          <button onClick={goHome}>
+          <button
+            onClick={() =>
+              navigate("home")
+            }
+          >
             Home
           </button>
 
 
-          <button onClick={goProducts}>
+          <button
+            onClick={() =>
+              navigate("products")
+            }
+          >
             Products
           </button>
 
 
-          <button onClick={openCart}>
-
-            🛒 Cart
-
-            <span className="cart-badge">
-              {cartCount}
-            </span>
-
+          <button
+            onClick={() =>
+              navigate("cart")
+            }
+          >
+            🛒 Cart ({cartCount})
           </button>
 
 
           {loggedInUser && (
 
-            <button onClick={openOrders}>
+            <button
+              onClick={() =>
+                navigate("orders")
+              }
+            >
               Orders
             </button>
 
           )}
 
 
-          {!loggedInUser && (
+          {!loggedInUser ? (
 
-            <button
-              onClick={() =>
-                navigate("login")
-              }
-            >
-              Login
-            </button>
+            <>
 
-          )}
-
-
-          {!loggedInUser && (
-
-            <button
-              onClick={() =>
-                navigate("register")
-              }
-            >
-              Register
-            </button>
-
-          )}
+              <button
+                onClick={() =>
+                  navigate("login")
+                }
+              >
+                Login
+              </button>
 
 
-          {loggedInUser && (
+              <button
+                onClick={() =>
+                  navigate("register")
+                }
+              >
+                Register
+              </button>
 
-            <span className="user-name">
-              Hi, {loggedInUser.name}
-            </span>
+            </>
 
-          )}
-
-
-          {loggedInUser && (
+          ) : (
 
             <button
               onClick={handleLogout}
@@ -686,63 +693,6 @@ function App() {
             </button>
 
           )}
-
-
-          {/* ADMIN NOT SHOWN */}
-
-          <div className="menu-container">
-
-
-            <button
-              className="menu-button"
-              onClick={() =>
-                setMenuOpen(!menuOpen)
-              }
-            >
-              ☰
-            </button>
-
-
-            {menuOpen && (
-
-              <div className="menu-dropdown">
-
-                <button
-                  onClick={goHome}
-                >
-                  Home
-                </button>
-
-
-                <button
-                  onClick={goProducts}
-                >
-                  Products
-                </button>
-
-
-                <button
-                  onClick={openCart}
-                >
-                  Cart
-                </button>
-
-
-                {loggedInUser && (
-
-                  <button
-                    onClick={openOrders}
-                  >
-                    Orders
-                  </button>
-
-                )}
-
-              </div>
-
-            )}
-
-          </div>
 
         </div>
 
@@ -753,287 +703,436 @@ function App() {
   };
 
 
-  // ==================================================
-  // HOME PAGE
-  // ==================================================
+  // ===================================================
+  // HOME
+  // ===================================================
 
-  const HomePage = () => {
+  if (page === "home") {
 
     return (
 
-      <div className="home-page">
+      <>
+
+        <Navbar />
 
 
-        <section className="hero-section">
-
-          <div className="hero-content">
-
-            <p className="hero-small">
-              WELCOME TO SHOPZONE
-            </p>
+        <div className="home-page">
 
 
-            <h1>
-              Everything You Need,
-              <br />
-              All In One Place.
-            </h1>
+          {/* HERO */}
+
+          <section className="hero-section">
+
+            <div className="hero-content">
+
+              <p className="hero-small">
+                WELCOME TO SHOPZONE
+              </p>
 
 
-            <p className="hero-text">
-              Discover quality products,
-              amazing prices and a simple
-              shopping experience.
-            </p>
-
-
-            <button
-              className="hero-btn"
-              onClick={goProducts}
-            >
-              Shop Now →
-            </button>
-
-          </div>
-
-
-          <div className="hero-design">
-
-            <div className="hero-circle"></div>
-
-
-            <div className="hero-card">
-
-              <span>
-                🛍️
-              </span>
-
-
-              <h3>
-                ShopZone
-              </h3>
+              <h1>
+                Shop Smart.
+                <br />
+                Live Better.
+              </h1>
 
 
               <p>
-                Premium Shopping
-              </p>
-
-            </div>
-
-          </div>
-
-        </section>
-
-
-        <section className="home-category-section">
-
-          <p className="section-small">
-            SHOP BY CATEGORY
-          </p>
-
-
-          <h2>
-            Explore Categories
-          </h2>
-
-
-          <p className="section-description">
-            Find products that match your
-            needs and style.
-          </p>
-
-
-          <div className="home-categories">
-
-            {categories
-              .filter(
-                (category) =>
-                  category !== "All"
-              )
-              .slice(0, 4)
-              .map(
-                (category) => (
-
-                  <div
-                    className="home-category-card"
-                    key={category}
-                    onClick={() => {
-
-                      setSelectedCategory(
-                        category
-                      );
-
-                      navigate(
-                        "products"
-                      );
-
-                    }}
-                  >
-
-                    <div className="category-icon">
-                      🛍️
-                    </div>
-
-
-                    <h3>
-                      {category}
-                    </h3>
-
-
-                    <p>
-                      Explore Products →
-                    </p>
-
-                  </div>
-
-                )
-              )}
-
-          </div>
-
-        </section>
-
-
-        <section className="featured-section">
-
-          <div className="featured-heading">
-
-            <div>
-
-              <p className="section-small">
-                FEATURED PRODUCTS
+                Discover premium products
+                at amazing prices.
+                Shop your favourite products
+                from ShopZone.
               </p>
 
 
-              <h2>
-                Popular Products
-              </h2>
+              <button
+                className="hero-btn"
+                onClick={() =>
+                  navigate("products")
+                }
+              >
+                Shop Now →
+              </button>
 
             </div>
 
-
-            <button
-              onClick={goProducts}
-            >
-              View All
-            </button>
-
-          </div>
+          </section>
 
 
-          <div className="product-container">
+          {/* FEATURES */}
 
-            {products
-              .slice(0, 3)
-              .map(
-                (product) => (
-
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    setCartCount={
-                      setCartCount
-                    }
-                    loggedInUser={
-                      loggedInUser
-                    }
-                    setPage={
-                      (p) =>
-                        navigate(p)
-                    }
-                    setSelectedProduct={
-                      openProductDetails
-                    }
-                  />
-
-                )
-              )}
-
-          </div>
-
-        </section>
+          <section className="features-section">
 
 
-        <section className="why-section">
+            <div className="feature-card">
 
-          <p className="section-small">
-            WHY SHOPZONE
-          </p>
-
-
-          <h2>
-            Shopping Made Simple
-          </h2>
-
-
-          <p className="section-description">
-            We focus on making your
-            shopping experience easy
-            and enjoyable.
-          </p>
-
-
-          <div className="why-container">
-
-
-            <div className="why-card">
-
-              <div className="why-icon">
+              <div className="feature-icon">
                 🚚
               </div>
-
 
               <h3>
                 Fast Delivery
               </h3>
 
-
               <p>
-                Get your products
-                delivered quickly
-                and safely.
+                Get your products delivered
+                quickly and safely.
               </p>
 
             </div>
 
 
-            <div className="why-card">
+            <div className="feature-card">
 
-              <div className="why-icon">
+              <div className="feature-icon">
                 🔒
               </div>
-
 
               <h3>
                 Secure Shopping
               </h3>
 
-
               <p>
-                Your shopping
-                experience is simple
-                and secure.
+                Your shopping experience
+                is safe and secure.
               </p>
 
             </div>
 
 
-            <div className="why-card">
+            <div className="feature-card">
 
-              <div className="why-icon">
-                ⭐
+              <div className="feature-icon">
+                💳
               </div>
 
+              <h3>
+                Easy Payment
+              </h3>
+
+              <p>
+                Simple and convenient
+                payment options.
+              </p>
+
+            </div>
+
+
+            <div className="feature-card">
+
+              <div className="feature-icon">
+                ⭐
+              </div>
 
               <h3>
                 Quality Products
               </h3>
 
+              <p>
+                Carefully selected
+                products for you.
+              </p>
+
+            </div>
+
+
+          </section>
+
+
+          {/* CATEGORY */}
+
+          <section className="category-section">
+
+            <div className="section-heading">
 
               <p>
-                Discover products
-                selected for a great
-                shopping experience.
+                EXPLORE
+              </p>
+
+              <h2>
+                Shop By Category
+              </h2>
+
+              <span>
+                Find products that match
+                your lifestyle.
+              </span>
+
+            </div>
+
+
+            <div className="category-grid">
+
+
+              <div
+                className="category-card"
+                onClick={() =>
+                  navigate("products")
+                }
+              >
+
+                <div>
+                  📱
+                </div>
+
+                <h3>
+                  Mobiles
+                </h3>
+
+                <p>
+                  Latest smartphones
+                </p>
+
+              </div>
+
+
+              <div
+                className="category-card"
+                onClick={() =>
+                  navigate("products")
+                }
+              >
+
+                <div>
+                  💻
+                </div>
+
+                <h3>
+                  Laptops
+                </h3>
+
+                <p>
+                  Powerful laptops
+                </p>
+
+              </div>
+
+
+              <div
+                className="category-card"
+                onClick={() =>
+                  navigate("products")
+                }
+              >
+
+                <div>
+                  🎧
+                </div>
+
+                <h3>
+                  Electronics
+                </h3>
+
+                <p>
+                  Modern electronics
+                </p>
+
+              </div>
+
+
+              <div
+                className="category-card"
+                onClick={() =>
+                  navigate("products")
+                }
+              >
+
+                <div>
+                  👕
+                </div>
+
+                <h3>
+                  Fashion
+                </h3>
+
+                <p>
+                  Stylish fashion
+                </p>
+
+              </div>
+
+
+            </div>
+
+          </section>
+
+
+          {/* CTA */}
+
+          <section className="home-cta">
+
+            <div>
+
+              <p>
+                READY TO SHOP?
+              </p>
+
+              <h2>
+                Find Something You'll Love
+              </h2>
+
+              <span>
+                Explore our collection
+                and start shopping today.
+              </span>
+
+            </div>
+
+
+            <button
+              onClick={() =>
+                navigate("products")
+              }
+            >
+              Explore Products →
+            </button>
+
+          </section>
+
+
+        </div>
+
+
+        {/* =================================================
+            FOOTER - HOME PAGE ONLY
+        ================================================= */}
+
+        <footer className="home-footer">
+
+          <div className="footer-container">
+
+
+            {/* ABOUT */}
+
+            <div className="footer-column">
+
+              <h2>
+                ShopZone
+              </h2>
+
+              <p>
+                Your trusted online shopping
+                destination for quality products
+                at great prices.
+              </p>
+
+            </div>
+
+
+            {/* QUICK LINKS */}
+
+            <div className="footer-column">
+
+              <h3>
+                Quick Links
+              </h3>
+
+
+              <button
+                onClick={() =>
+                  navigate("home")
+                }
+              >
+                Home
+              </button>
+
+
+              <button
+                onClick={() =>
+                  navigate("products")
+                }
+              >
+                Products
+              </button>
+
+
+              <button
+                onClick={() =>
+                  navigate("cart")
+                }
+              >
+                Cart
+              </button>
+
+
+              {loggedInUser && (
+
+                <button
+                  onClick={() =>
+                    navigate("orders")
+                  }
+                >
+                  My Orders
+                </button>
+
+              )}
+
+            </div>
+
+
+            {/* CUSTOMER */}
+
+            <div className="footer-column">
+
+              <h3>
+                Customer
+              </h3>
+
+
+              {!loggedInUser ? (
+
+                <>
+
+                  <button
+                    onClick={() =>
+                      navigate("login")
+                    }
+                  >
+                    Login
+                  </button>
+
+
+                  <button
+                    onClick={() =>
+                      navigate("register")
+                    }
+                  >
+                    Register
+                  </button>
+
+                </>
+
+              ) : (
+
+                <button
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
+
+              )}
+
+            </div>
+
+
+            {/* CONTACT */}
+
+            <div className="footer-column">
+
+              <h3>
+                Contact
+              </h3>
+
+              <p>
+                📧 support@shopzone.com
+              </p>
+
+              <p>
+                📞 +91 8778470130
+              </p>
+
+              <p>
+                📍 Chennai,Velachery
               </p>
 
             </div>
@@ -1041,763 +1140,463 @@ function App() {
 
           </div>
 
-        </section>
 
-      </div>
+          {/* FOOTER BOTTOM */}
+
+          <div className="footer-bottom">
+
+            <p>
+              © 2026 ShopZone.
+              All Rights Reserved.
+            </p>
+
+            <p>
+              Built with React + Spring Boot
+            </p>
+
+          </div>
+
+
+        </footer>
+
+      </>
 
     );
 
-  };
+  }
 
 
-  // ==================================================
-  // PRODUCTS PAGE
-  // ==================================================
+  // ===================================================
+  // PRODUCTS
+  // ===================================================
 
-  const ProductsPage = () => {
+  if (page === "products") {
 
     return (
 
-      <div className="app">
+      <>
 
+        <Navbar />
 
-        <h1>
-          Products
-        </h1>
+        <div className="products-page">
 
-
-        <div className="category-menu">
-
-          {categories.map(
-            (category) => (
-
-              <button
-                key={category}
-                className={
-                  selectedCategory ===
-                  category
-                    ? "active-category"
-                    : ""
-                }
-                onClick={() =>
-                  setSelectedCategory(
-                    category
-                  )
-                }
-              >
-                {category}
-              </button>
-
-            )
-          )}
-
-        </div>
-
-
-        <div className="product-container">
-
-          {filteredProducts.length ===
-          0 ? (
+          <div className="products-heading">
 
             <p>
-              No products available.
+              SHOPZONE
             </p>
 
-          ) : (
+            <h1>
+              Our Products
+            </h1>
 
-            filteredProducts.map(
-              (product) => (
+            <span>
+              Explore our latest collection.
+            </span>
+
+          </div>
+
+
+          <div className="products-grid">
+
+            {products.length === 0 ? (
+
+              <div className="no-products">
+
+                <h2>
+                  No Products Available
+                </h2>
+
+                <p>
+                  Please check again later.
+                </p>
+
+              </div>
+
+            ) : (
+
+              products.map((product) => (
 
                 <ProductCard
                   key={product.id}
                   product={product}
-                  setCartCount={
-                    setCartCount
-                  }
-                  loggedInUser={
-                    loggedInUser
-                  }
-                  setPage={
-                    (p) =>
-                      navigate(p)
-                  }
+                  setCartCount={setCartCount}
+                  loggedInUser={loggedInUser}
+                  setPage={navigate}
                   setSelectedProduct={
-                    openProductDetails
+                    setSelectedProduct
                   }
                 />
 
-              )
-            )
-
-          )}
-
-        </div>
-
-      </div>
-
-    );
-
-  };
-
-
-  // ==================================================
-  // PAGE CONTENT
-  // ==================================================
-
-  let content;
-
-
-  // HOME
-
-  if (page === "home") {
-
-    content = <HomePage />;
-
-  }
-
-
-  // PRODUCTS
-
-  else if (page === "products") {
-
-    content = <ProductsPage />;
-
-  }
-
-
-  // PRODUCT DETAILS
-
-  else if (
-    page === "productDetails"
-  ) {
-
-    content = (
-
-      <ProductDetails
-        product={selectedProduct}
-        setPage={
-          (p) => navigate(p)
-        }
-        setCartCount={
-          setCartCount
-        }
-        loggedInUser={
-          loggedInUser
-        }
-      />
-
-    );
-
-  }
-
-
-  // CART
-
-  else if (page === "cart") {
-
-    if (!loggedInUser) {
-
-      content = (
-
-        <Login
-          onLoginSuccess={
-            handleLoginSuccess
-          }
-          setPage={
-            (p) => navigate(p)
-          }
-        />
-
-      );
-
-    } else {
-
-      content = (
-
-        <Cart
-          loggedInUser={
-            loggedInUser
-          }
-          setCartCount={
-            setCartCount
-          }
-          setPage={
-            (p) => navigate(p)
-          }
-        />
-
-      );
-
-    }
-
-  }
-
-
-  // CHECKOUT
-
-  else if (
-    page === "checkout"
-  ) {
-
-    if (!loggedInUser) {
-
-      content = (
-
-        <Login
-          onLoginSuccess={
-            handleLoginSuccess
-          }
-          setPage={
-            (p) => navigate(p)
-          }
-        />
-
-      );
-
-    } else {
-
-      content = (
-
-        <Checkout
-          loggedInUser={
-            loggedInUser
-          }
-          setPage={
-            (p) => navigate(p)
-          }
-        />
-
-      );
-
-    }
-
-  }
-
-
-  // ORDER SUCCESS
-
-  else if (
-    page === "orderSuccess"
-  ) {
-
-    content = (
-
-      <OrderSuccess
-        setPage={
-          (p) => navigate(p)
-        }
-      />
-
-    );
-
-  }
-
-
-  // ORDERS
-
-  else if (
-    page === "orders"
-  ) {
-
-    if (!loggedInUser) {
-
-      content = (
-
-        <Login
-          onLoginSuccess={
-            handleLoginSuccess
-          }
-          setPage={
-            (p) => navigate(p)
-          }
-        />
-
-      );
-
-    } else {
-
-      content = (
-
-        <OrderHistory
-          loggedInUser={
-            loggedInUser
-          }
-          setPage={
-            (p) => navigate(p)
-          }
-        />
-
-      );
-
-    }
-
-  }
-
-
-  // REGISTER
-
-  else if (
-    page === "register"
-  ) {
-
-    content = (
-
-      <Register
-        onRegisterSuccess={
-          handleRegisterSuccess
-        }
-        setPage={
-          (p) => navigate(p)
-        }
-      />
-
-    );
-
-  }
-
-
-  // LOGIN
-
-  else if (
-    page === "login"
-  ) {
-
-    content = (
-
-      <Login
-        onLoginSuccess={
-          handleLoginSuccess
-        }
-        setPage={
-          (p) => navigate(p)
-        }
-      />
-
-    );
-
-  }
-
-
-  // ==================================================
-  // ADMIN LOGIN
-  // ==================================================
-
-  else if (
-    page === "adminLogin"
-  ) {
-
-    content = (
-
-      <AdminLogin
-        onAdminLoginSuccess={
-          handleAdminLoginSuccess
-        }
-        setPage={
-          (p) => navigate(p)
-        }
-      />
-
-    );
-
-  }
-
-
-  // ==================================================
-  // ADMIN PANEL
-  // ==================================================
-
-  else if (
-    page === "admin"
-  ) {
-
-    if (!admin) {
-
-      content = (
-
-        <AdminLogin
-          onAdminLoginSuccess={
-            handleAdminLoginSuccess
-          }
-          setPage={
-            (p) => navigate(p)
-          }
-        />
-
-      );
-
-    } else {
-
-      content = (
-
-        <AdminPanel
-          admin={admin}
-          onLogout={
-            handleAdminLogout
-          }
-          setPage={
-            (p) => navigate(p)
-          }
-        />
-
-      );
-
-    }
-
-  }
-
-
-  // ==================================================
-  // ADMIN ADD PRODUCT
-  // ==================================================
-
-  else if (
-    page === "adminAddProduct"
-  ) {
-
-    if (!admin) {
-
-      content = (
-
-        <AdminLogin
-          onAdminLoginSuccess={
-            handleAdminLoginSuccess
-          }
-          setPage={
-            (p) => navigate(p)
-          }
-        />
-
-      );
-
-    } else {
-
-      content = (
-
-        <AdminAddProduct
-          setPage={
-            (p) => navigate(p)
-          }
-        />
-
-      );
-
-    }
-
-  }
-
-
-  // ==================================================
-  // ADMIN PRODUCTS
-  // ==================================================
-
-  else if (
-    page === "adminProducts"
-  ) {
-
-    if (!admin) {
-
-      content = (
-
-        <AdminLogin
-          onAdminLoginSuccess={
-            handleAdminLoginSuccess
-          }
-          setPage={
-            (p) => navigate(p)
-          }
-        />
-
-      );
-
-    } else {
-
-      content = (
-
-        <AdminProducts
-          setPage={
-            (p) => navigate(p)
-          }
-          loadProducts={
-            loadProducts
-          }
-        />
-
-      );
-
-    }
-
-  }
-
-
-  // ==================================================
-  // ADMIN ORDERS
-  // ==================================================
-
-  else if (
-    page === "adminOrders"
-  ) {
-
-    if (!admin) {
-
-      content = (
-
-        <AdminLogin
-          onAdminLoginSuccess={
-            handleAdminLoginSuccess
-          }
-          setPage={
-            (p) => navigate(p)
-          }
-        />
-
-      );
-
-    } else {
-
-      content = (
-
-        <AdminOrders
-          setPage={
-            (p) => navigate(p)
-          }
-        />
-
-      );
-
-    }
-
-  }
-
-
-  // ==================================================
-  // DEFAULT
-  // ==================================================
-
-  else {
-
-    content = <HomePage />;
-
-  }
-
-
-  // ==================================================
-  // FOOTER
-  // ==================================================
-
-  const Footer = () => {
-
-    return (
-
-      <footer className="site-footer">
-
-
-        <div className="footer-container">
-
-
-          <div className="footer-column footer-brand">
-
-            <h2>
-              ShopZone
-            </h2>
-
-
-            <p>
-              Your one-stop destination
-              for quality products,
-              great prices and a simple
-              shopping experience.
-            </p>
-
-
-            <div className="footer-social">
-
-              <span>𝕗</span>
-
-              <span>𝕏</span>
-
-              <span>◎</span>
-
-              <span>▶</span>
-
-            </div>
-
-          </div>
-
-
-          <div className="footer-column">
-
-            <h3>
-              Quick Links
-            </h3>
-
-
-            <button
-              onClick={goHome}
-            >
-              Home
-            </button>
-
-
-            <button
-              onClick={goProducts}
-            >
-              Products
-            </button>
-
-
-            <button
-              onClick={openCart}
-            >
-              Cart
-            </button>
-
-
-            <button
-              onClick={openOrders}
-            >
-              Orders
-            </button>
-
-          </div>
-
-
-          <div className="footer-column">
-
-            <h3>
-              Customer
-            </h3>
-
-
-            {!loggedInUser && (
-
-              <>
-
-                <button
-                  onClick={() =>
-                    navigate("login")
-                  }
-                >
-                  Login
-                </button>
-
-
-                <button
-                  onClick={() =>
-                    navigate("register")
-                  }
-                >
-                  Register
-                </button>
-
-              </>
+              ))
 
             )}
 
-
-            <button
-              onClick={goProducts}
-            >
-              Shop Now
-            </button>
-
-          </div>
-
-
-          <div className="footer-column">
-
-            <h3>
-              Contact Us
-            </h3>
-
-
-            <p>
-              📍 Chennai, India
-            </p>
-
-
-            <p>
-              📧 support@shopzone.com
-            </p>
-
-
-            <p>
-              📞 +91 98765 43210
-            </p>
-
-          </div>
-
-
-        </div>
-
-
-        <div className="footer-bottom">
-
-          <p>
-            © 2026 ShopZone.
-            All Rights Reserved.
-          </p>
-
-
-          <div>
-
-            <span>
-              Privacy Policy
-            </span>
-
-
-            <span>
-              Terms & Conditions
-            </span>
-
           </div>
 
         </div>
 
-
-      </footer>
+      </>
 
     );
 
-  };
+  }
 
 
-  // ==================================================
-  // FINAL RETURN
-  // ==================================================
+  // ===================================================
+  // PRODUCT DETAILS
+  // ===================================================
+
+  if (page === "productDetails") {
+
+    return (
+
+      <>
+
+        <Navbar />
+
+        <ProductDetails
+          product={selectedProduct}
+          setPage={navigate}
+          setCartCount={setCartCount}
+          loggedInUser={loggedInUser}
+        />
+
+      </>
+
+    );
+
+  }
+
+
+  // ===================================================
+  // LOGIN
+  // ===================================================
+
+  if (page === "login") {
+
+    return (
+
+      <Login
+        setPage={navigate}
+        setLoggedInUser={
+          handleLoginSuccess
+        }
+      />
+
+    );
+
+  }
+
+
+  // ===================================================
+  // REGISTER
+  // ===================================================
+
+  if (page === "register") {
+
+    return (
+
+      <Register
+        setPage={navigate}
+      />
+
+    );
+
+  }
+
+
+  // ===================================================
+  // CART
+  // ===================================================
+
+  if (page === "cart") {
+
+    return (
+
+      <>
+
+        <Navbar />
+
+        <Cart
+          setPage={navigate}
+          loggedInUser={loggedInUser}
+          setCartCount={setCartCount}
+        />
+
+      </>
+
+    );
+
+  }
+
+
+  // ===================================================
+  // CHECKOUT
+  // ===================================================
+
+  if (page === "checkout") {
+
+    return (
+
+      <>
+
+        <Navbar />
+
+        <Checkout
+          setPage={navigate}
+          loggedInUser={loggedInUser}
+        />
+
+      </>
+
+    );
+
+  }
+
+
+  // ===================================================
+  // ORDER SUCCESS
+  // ===================================================
+
+ if (page === "orderSuccess") {
+
+    return (
+
+      <>
+
+        <Navbar />
+
+        <OrderSuccess
+          setPage={navigate}
+        />
+
+      </>
+
+    );
+
+  }
+
+
+  // ===================================================
+  // ORDER HISTORY
+  // ===================================================
+
+  if (page === "orders") {
+
+    if (!loggedInUser) {
+
+      return (
+
+        <Login
+          setPage={navigate}
+          setLoggedInUser={
+            handleLoginSuccess
+          }
+        />
+
+      );
+
+    }
+
+
+    return (
+
+      <>
+
+        <Navbar />
+
+        <OrderHistory
+          setPage={navigate}
+          loggedInUser={loggedInUser}
+        />
+
+      </>
+
+    );
+
+  }
+
+
+  // ===================================================
+  // ADMIN LOGIN
+  // ===================================================
+
+  if (page === "adminLogin") {
+
+    return (
+
+      <AdminLogin
+        setPage={navigate}
+        onAdminLoginSuccess={
+          handleAdminLoginSuccess
+        }
+      />
+
+    );
+
+  }
+
+
+  // ===================================================
+  // ADMIN DASHBOARD
+  // ===================================================
+
+  if (page === "admin") {
+
+    if (!admin) {
+
+      return (
+
+        <AdminLogin
+          setPage={navigate}
+          onAdminLoginSuccess={
+            handleAdminLoginSuccess
+          }
+        />
+
+      );
+
+    }
+
+
+    return (
+
+      <AdminPanel
+        admin={admin}
+        onLogout={handleAdminLogout}
+        setPage={navigate}
+      />
+
+    );
+
+  }
+
+
+  // ===================================================
+  // ADMIN ADD PRODUCT
+  // ===================================================
+
+  if (page === "addProduct") {
+
+    if (!admin) {
+
+      return (
+
+        <AdminLogin
+          setPage={navigate}
+          onAdminLoginSuccess={
+            handleAdminLoginSuccess
+          }
+        />
+
+      );
+
+    }
+
+
+    return (
+
+      <AdminAddProduct
+        setPage={navigate}
+      />
+
+    );
+
+  }
+
+
+  // ===================================================
+  // ADMIN PRODUCTS
+  // ===================================================
+
+  if (page === "adminProducts") {
+
+    if (!admin) {
+
+      return (
+
+        <AdminLogin
+          setPage={navigate}
+          onAdminLoginSuccess={
+            handleAdminLoginSuccess
+          }
+        />
+
+      );
+
+    }
+
+
+    return (
+
+      <AdminProducts
+        setPage={navigate}
+      />
+
+    );
+
+  }
+
+
+  // ===================================================
+  // ADMIN ORDERS
+  // ===================================================
+
+  if (page === "adminOrders") {
+
+    if (!admin) {
+
+      return (
+
+        <AdminLogin
+          setPage={navigate}
+          onAdminLoginSuccess={
+            handleAdminLoginSuccess
+          }
+        />
+
+      );
+
+    }
+
+
+    return (
+
+      <AdminOrders
+        setPage={navigate}
+      />
+
+    );
+
+  }
+
+
+  // ===================================================
+  // FALLBACK
+  // ===================================================
 
   return (
 
     <>
 
-      {/* CUSTOMER NAVBAR */}
+      <Navbar />
 
-      {page !== "adminLogin" &&
-       page !== "admin" &&
-       page !== "adminAddProduct" &&
-       page !== "adminProducts" &&
-       page !== "adminOrders" && (
+      <div className="page-not-found">
 
-        <Navbar />
+        <h1>
+          Page Not Found
+        </h1>
 
-      )}
+        <button
+          onClick={() =>
+            navigate("home")
+          }
+        >
+          Go Home
+        </button>
 
-
-      {/* PAGE CONTENT */}
-
-      {content}
-
-
-      {/* CUSTOMER FOOTER */}
-
-      {page !== "adminLogin" &&
-       page !== "admin" &&
-       page !== "adminAddProduct" &&
-       page !== "adminProducts" &&
-       page !== "adminOrders" && (
-
-        <Footer />
-
-      )}
+      </div>
 
     </>
 

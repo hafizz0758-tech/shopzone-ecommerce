@@ -47,12 +47,9 @@ function AdminPanel({ admin, onLogout, setPage }) {
             Add new products to your ShopZone store.
           </p>
 
-          <button
-            onClick={() => setPage("adminAddProduct")}
-          >
-            Add Product
-          </button>
-
+         <button onClick={() => setPage("addProduct")}>
+  Add Product
+</button>
         </div>
 
 

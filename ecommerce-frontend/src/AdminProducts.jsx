@@ -4,31 +4,40 @@ import axios from "axios";
 function AdminProducts({ setPage }) {
 
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  // ==========================================
+  // GET ALL PRODUCTS
+  // ==========================================
 
-  // Get all products
-  const getProducts = () => {
+  const getProducts = async () => {
 
-    axios.get(
-      "http://localhost:8080/api/products"
-    )
-      .then((response) => {
+    try {
 
-        console.log(response.data);
+      const response = await axios.get(
+        "http://localhost:8080/api/products"
+      );
 
-        setProducts(response.data);
+      console.log("ADMIN PRODUCTS:", response.data);
 
-      })
-      .catch((error) => {
+      setProducts(response.data);
+      setLoading(false);
 
-        console.log(error);
+    } catch (error) {
 
-      });
+      console.log("GET PRODUCTS ERROR:", error);
 
+      alert("Failed to load products");
+
+      setLoading(false);
+    }
   };
 
 
-  // Load products
+  // ==========================================
+  // LOAD PRODUCTS
+  // ==========================================
+
   useEffect(() => {
 
     getProducts();
@@ -36,110 +45,194 @@ function AdminProducts({ setPage }) {
   }, []);
 
 
-  // Delete product
-  const deleteProduct = (id) => {
+  // ==========================================
+  // DELETE PRODUCT
+  // ==========================================
 
-    const confirmDelete =
-      window.confirm(
-        "Are you sure you want to delete this product?"
-      );
+  const deleteProduct = async (id) => {
+
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this product?"
+    );
 
     if (!confirmDelete) {
       return;
     }
 
+    try {
 
-    axios.delete(
-      `http://localhost:8080/api/products/${id}`
-    )
-      .then(() => {
+      await axios.delete(
+        `http://localhost:8080/api/products/${id}`
+      );
 
-        alert("Product deleted successfully!");
+      alert("Product deleted successfully!");
 
-        getProducts();
+      setProducts((previousProducts) =>
+        previousProducts.filter(
+          (product) => product.id !== id
+        )
+      );
 
-      })
-      .catch((error) => {
+    } catch (error) {
 
-        console.log(error);
+      console.log("DELETE PRODUCT ERROR:", error);
 
-        alert("Failed to delete product");
-
-      });
-
+      alert("Failed to delete product");
+    }
   };
 
 
+  // ==========================================
+  // LOADING
+  // ==========================================
+
+  if (loading) {
+
+    return (
+
+      <div className="admin-products-page">
+
+        <div className="admin-products-loading">
+
+          <h2>Loading Products...</h2>
+
+        </div>
+
+      </div>
+
+    );
+  }
+
+
+  // ==========================================
+  // PAGE
+  // ==========================================
+
   return (
 
-    <div className="admin-products">
+    <div className="admin-products-page">
 
-      <h1>
-        Manage Products
-      </h1>
-
-      <button
-        onClick={() => setPage("admin")}
-      >
-        ← Back to Admin
-      </button>
+      <div className="admin-products-container">
 
 
-      <div className="admin-product-container">
+        {/* BACK BUTTON */}
 
-        {products.map((product) => (
-
-          <div
-            className="admin-product-card"
-            key={product.id}
-          >
-
-            <img
-              src={
-                `http://localhost:8080/images/${product.image}`
-              }
-              alt={product.name}
-            />
+        <button
+          className="admin-back-btn"
+          onClick={() => setPage("admin")}
+        >
+          ← Back to Dashboard
+        </button>
 
 
-            <h2>
-              {product.name}
-            </h2>
+        {/* PAGE HEADING */}
 
+        <div className="admin-products-heading">
 
-            <p>
-              Price: ₹{product.price}
-            </p>
+          <div>
 
+            <p>SHOPZONE ADMIN</p>
 
-            <p>
-              Stock: {product.quantity}
-            </p>
+            <h1>Manage Products</h1>
 
-
-            <p>
-              Category: {product.category}
-            </p>
-
-
-            <button
-              onClick={() =>
-                deleteProduct(product.id)
-              }
-            >
-              🗑️ Delete
-            </button>
+            <span>
+              View and manage products in your store.
+            </span>
 
           </div>
 
-        ))}
+        </div>
+
+
+        {/* NO PRODUCTS */}
+
+        {products.length === 0 ? (
+
+          <div className="admin-no-products">
+
+            <div className="admin-no-products-icon">
+              📦
+            </div>
+
+            <h2>No Products Found</h2>
+
+            <p>
+              There are no products in your store.
+            </p>
+
+          </div>
+
+        ) : (
+
+          /* PRODUCTS GRID */
+
+          <div className="admin-products-grid">
+
+            {products.map((product) => (
+
+              <div
+                className="admin-product-card"
+                key={product.id}
+              >
+
+
+                {/* PRODUCT IMAGE */}
+
+                <div className="admin-product-image-box">
+
+                  <img
+                    src={`http://localhost:8080/images/${product.image}`}
+                    alt={product.name}
+                  />
+
+                </div>
+
+
+                {/* PRODUCT INFORMATION */}
+
+                <div className="admin-product-info">
+
+                  <span className="admin-product-category">
+                    {product.category}
+                  </span>
+
+                  <h2>
+                    {product.name}
+                  </h2>
+
+                  <p className="admin-product-price">
+                    ₹{product.price}
+                  </p>
+
+                  <p className="admin-product-stock">
+                    Stock: <strong>{product.quantity}</strong>
+                  </p>
+
+
+                  {/* DELETE BUTTON */}
+
+                  <button
+                    className="admin-delete-product-btn"
+                    onClick={() => deleteProduct(product.id)}
+                  >
+                    🗑 Delete Product
+                  </button>
+
+                </div>
+
+              </div>
+
+            ))}
+
+          </div>
+
+        )}
 
       </div>
 
     </div>
 
   );
-
 }
 
 export default AdminProducts;

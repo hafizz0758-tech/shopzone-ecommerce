@@ -1,32 +1,57 @@
 function OrderSuccess({ setPage }) {
 
   return (
-    <div className="success-page">
 
-      <div className="success-box">
+    <div className="order-success-page">
+
+      <div className="order-success-card">
 
         <div className="success-icon">
           ✓
         </div>
 
-        <h1>Order Placed Successfully!</h1>
 
-        <p>
-          Thank you for your order.
+        <p className="success-small">
+          SHOPZONE
         </p>
 
-        <p>
-          Your order has been successfully placed.
+
+        <h1>
+          Order Placed Successfully!
+        </h1>
+
+
+        <p className="success-message">
+          Thank you for shopping with ShopZone.
+          Your order has been placed successfully.
         </p>
 
-        <button onClick={() => setPage("products")}>
-          Continue Shopping
-        </button>
+
+        <div className="success-buttons">
+
+          <button
+            className="success-orders-btn"
+            onClick={() => setPage("orders")}
+          >
+            View My Orders
+          </button>
+
+
+          <button
+            className="success-home-btn"
+            onClick={() => setPage("products")}
+          >
+            Continue Shopping
+          </button>
+
+        </div>
 
       </div>
 
     </div>
+
   );
+
 }
 
 export default OrderSuccess;
