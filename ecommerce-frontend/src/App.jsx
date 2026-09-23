@@ -298,7 +298,7 @@ function App() {
 
     axios
       .get(
-        "http://localhost:8080/api/products"
+        "https://shopzone-ecommerce-production-0d1b.up.railway.app/api/products"
       )
       .then((response) => {
 
@@ -333,7 +333,7 @@ function App() {
 
     axios
       .get(
-        `http://localhost:8080/api/cart?userId=${user.id}`
+        `https://shopzone-ecommerce-production-0d1b.up.railway.app/api/cart?userId=${user.id}`
       )
       .then((response) => {
 

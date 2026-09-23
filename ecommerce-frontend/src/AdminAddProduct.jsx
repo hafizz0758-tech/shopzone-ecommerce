@@ -28,7 +28,7 @@ function AdminAddProduct({ setPage }) {
     try {
 
       const response = await axios.post(
-        "http://localhost:8080/api/products",
+        "https://shopzone-ecommerce-production-0d1b.up.railway.app/api/products",
         formData
       );
 

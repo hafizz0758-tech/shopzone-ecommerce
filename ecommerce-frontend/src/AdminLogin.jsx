@@ -17,7 +17,7 @@ function AdminLogin({ setPage, onAdminLoginSuccess }) {
 
     axios
       .post(
-        "http://localhost:8080/api/admin/login",
+        "https://shopzone-ecommerce-production-0d1b.up.railway.app/api/admin/login",
         adminData
       )
       .then((response) => {

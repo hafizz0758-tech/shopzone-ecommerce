@@ -27,7 +27,7 @@ function Checkout({ loggedInUser, setPage }) {
 
     axios
       .get(
-        `http://localhost:8080/api/cart?userId=${loggedInUser.id}`
+        `https://shopzone-ecommerce-production-0d1b.up.railway.app/api/cart?userId=${loggedInUser.id}`
       )
       .then((response) => {
 
@@ -128,7 +128,7 @@ function Checkout({ loggedInUser, setPage }) {
 
 
       const response = await axios.post(
-        "http://localhost:8080/api/orders",
+        "https://shopzone-ecommerce-production-0d1b.up.railway.app/api/orders",
         orderData
       );
 
@@ -551,7 +551,7 @@ function Checkout({ loggedInUser, setPage }) {
                 >
 
                   <img
-                    src={`http://localhost:8080/images/${item.image}`}
+                    src={`https://shopzone-ecommerce-production-0d1b.up.railway.app/images/${item.image}`}
                     alt={item.name}
                     style={{
                       width: "75px",

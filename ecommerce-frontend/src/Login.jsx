@@ -15,7 +15,7 @@ function Login() {
     try {
 
       const response = await axios.post(
-        "http://localhost:8080/api/users/login",
+        "https://shopzone-ecommerce-production-0d1b.up.railway.app/api/users/login",
         {
           email: email,
           password: password

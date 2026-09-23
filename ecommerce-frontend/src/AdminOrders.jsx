@@ -18,7 +18,7 @@ function AdminOrders({ setPage }) {
       console.log("Getting all orders...");
 
       const response = await axios.get(
-        "http://localhost:8080/api/orders/all"
+        "https://shopzone-ecommerce-production-0d1b.up.railway.app/api/orders/all"
       );
 
 
@@ -68,7 +68,7 @@ function AdminOrders({ setPage }) {
 
       const response = await axios.put(
 
-        `http://localhost:8080/api/orders/${orderId}/status?status=${encodeURIComponent(status)}`
+        `https://shopzone-ecommerce-production-0d1b.up.railway.app/api/orders/${orderId}/status?status=${encodeURIComponent(status)}`
 
       );
 

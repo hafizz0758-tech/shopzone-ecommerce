@@ -20,7 +20,7 @@ function OrderHistory({ loggedInUser, setPage }) {
 
     axios
       .get(
-        `http://localhost:8080/api/orders?userId=${loggedInUser.id}`
+        `https://shopzone-ecommerce-production-0d1b.up.railway.app/api/orders?userId=${loggedInUser.id}`
       )
       .then((response) => {
 

@@ -42,7 +42,7 @@ function Register({ setPage }) {
 
 
     axios.post(
-      "http://localhost:8080/api/users/register",
+      "https://shopzone-ecommerce-production-0d1b.up.railway.app/api/users/register",
       user
     )
 

@@ -15,7 +15,7 @@ function AdminProducts({ setPage }) {
     try {
 
       const response = await axios.get(
-        "http://localhost:8080/api/products"
+        "https://shopzone-ecommerce-production-0d1b.up.railway.app/api/products"
       );
 
       console.log("ADMIN PRODUCTS:", response.data);
@@ -62,7 +62,7 @@ function AdminProducts({ setPage }) {
     try {
 
       await axios.delete(
-        `http://localhost:8080/api/products/${id}`
+        `https://shopzone-ecommerce-production-0d1b.up.railway.app/api/products/${id}`
       );
 
       alert("Product deleted successfully!");
@@ -181,7 +181,7 @@ function AdminProducts({ setPage }) {
                 <div className="admin-product-image-box">
 
                   <img
-                    src={`http://localhost:8080/images/${product.image}`}
+                    src={`https://shopzone-ecommerce-production-0d1b.up.railway.app/images/${product.image}`}
                     alt={product.name}
                   />
 

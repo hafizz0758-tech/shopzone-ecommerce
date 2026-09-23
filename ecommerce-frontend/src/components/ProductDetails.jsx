@@ -64,7 +64,7 @@ function ProductDetails({
 
 
     axios.post(
-      "http://localhost:8080/api/cart",
+      "https://shopzone-ecommerce-production-0d1b.up.railway.app/api/cart",
       cartItem
     )
 
@@ -75,7 +75,7 @@ function ProductDetails({
         alert("Product added to cart!");
 
         return axios.get(
-          `http://localhost:8080/api/cart?userId=${loggedInUser.id}`
+          `https://shopzone-ecommerce-production-0d1b.up.railway.app/api/cart?userId=${loggedInUser.id}`
         );
 
       })
@@ -145,7 +145,7 @@ function ProductDetails({
         <div className="product-details-image-box">
 
           <img
-            src={`http://localhost:8080/images/${product.image}`}
+            src={`https://shopzone-ecommerce-production-0d1b.up.railway.app/images/${product.image}`}
             alt={product.name}
             className="product-details-image"
           />

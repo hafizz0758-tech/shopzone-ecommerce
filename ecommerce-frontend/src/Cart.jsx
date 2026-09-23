@@ -12,7 +12,7 @@ function Cart({ setPage, loggedInUser, setCartCount }) {
     }
 
     axios
-      .get(`http://localhost:8080/api/cart?userId=${loggedInUser.id}`)
+      .get(`https://shopzone-ecommerce-production-0d1b.up.railway.app/api/cart?userId=${loggedInUser.id}`)
       .then((response) => {
 
         setCarts(response.data);
@@ -35,7 +35,7 @@ function Cart({ setPage, loggedInUser, setCartCount }) {
   const removeFromCart = (id) => {
 
     axios
-      .delete(`http://localhost:8080/api/cart/${id}`)
+      .delete(`https://shopzone-ecommerce-production-0d1b.up.railway.app/api/cart/${id}`)
       .then(() => {
 
         setCarts((previousCarts) =>
@@ -146,7 +146,7 @@ function Cart({ setPage, loggedInUser, setCartCount }) {
                 >
 
                   <img
-                    src={`http://localhost:8080/images/${item.image}`}
+                    src={`https://shopzone-ecommerce-production-0d1b.up.railway.app/images/${item.image}`}
                     alt={item.name}
                     className="cart-item-image"
                   />
