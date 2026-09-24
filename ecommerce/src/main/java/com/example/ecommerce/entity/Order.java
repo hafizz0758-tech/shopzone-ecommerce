@@ -23,6 +23,7 @@ public class Order {
     
 
     double total;
+    String status;
 
     public Order() {
     }
@@ -74,6 +75,13 @@ public class Order {
     public void setTotal(double total) {
         this.total = total;
     }
+public String getStatus() {
+    return status;
+}
+
+public void setStatus(String status) {
+    this.status = status;
+}
     public String getProductName() {
         return productName;
     }
