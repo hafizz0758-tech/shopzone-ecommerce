@@ -149,5 +149,17 @@ public class OrderService {
         return or.findByUserId(userId);
 
     }
+public Order updateOrderStatus(int id, String status) {
+
+    Order order = or.findById(id).orElse(null);
+
+    if (order == null) {
+        throw new RuntimeException("Order not found");
+    }
+
+    order.setStatus(status);
+
+    return or.save(order);
+}
 
 }
