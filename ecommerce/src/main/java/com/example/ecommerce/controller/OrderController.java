@@ -5,7 +5,9 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,15 +24,12 @@ public class OrderController {
     @Autowired
     OrderService os;
 
-
     // Save Order
     @PostMapping
     public Order saveOrder(@RequestBody Order o) {
 
         return os.saveOrder(o);
-
     }
-
 
     // Get current user's orders
     @GetMapping
@@ -38,13 +37,21 @@ public class OrderController {
             @RequestParam int userId) {
 
         return os.getOrdersByUser(userId);
-
     }
 
+    // Get all orders - Admin
     @GetMapping("/all")
     public List<Order> getAllOrders() {
 
         return os.getAllOrders();
+    }
 
+    // Update order status - Admin
+    @PutMapping("/{id}/status")
+    public Order updateOrderStatus(
+            @PathVariable int id,
+            @RequestParam String status) {
+
+        return os.updateOrderStatus(id, status);
     }
 }
